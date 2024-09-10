@@ -12,14 +12,23 @@ namespace MSTest.TestFramework.Extensions.TestMethodEx
         private TestResult[] executeWithRepeatAndRetry(
             ITestMethod testMethod,
             int repeatCount,
-            int retryCount)
+            int retryCount,
+            bool retryOnFail = false)
         {
             var res = new List<TestResult>();
 
             for (int count = 0; count < repeatCount; count++)
             {
                 var testResults = executeWithRetryOnFailure(testMethod, retryCount);
-                res.AddRange(testResults);
+
+                if (retryOnFail && testResults.Any(tr => tr.Outcome == UnitTestOutcome.Passed))
+                {
+                    res.Add(testResults.First(tr => tr.Outcome == UnitTestOutcome.Passed));
+                }
+                else
+                {
+                    res.AddRange(testResults);
+                }
 
                 if (testResults.All((tr) => tr.Outcome == UnitTestOutcome.Passed))
                 {
@@ -64,6 +73,7 @@ namespace MSTest.TestFramework.Extensions.TestMethodEx
 
             int retryCount = 1;
             int repeatCount = 1;
+            bool retryOnFail = false;
 
             Attribute[] attr = testMethod.GetAllAttributes(false);
             if (attr == null)
@@ -85,6 +95,7 @@ namespace MSTest.TestFramework.Extensions.TestMethodEx
                     if (a is RetryAttribute retryAttr)
                     {
                         retryCount = retryAttr.Value;
+                        retryOnFail = retryAttr.RetryOnFail;
                     }
 
                     if (a is RepeatAttribute repeatAttr)
@@ -94,7 +105,7 @@ namespace MSTest.TestFramework.Extensions.TestMethodEx
                 }
             }
 
-            var res = executeWithRepeatAndRetry(testMethod, repeatCount, retryCount);
+            var res = executeWithRepeatAndRetry(testMethod, repeatCount, retryCount, retryOnFail);
             return res;
         }
     }
