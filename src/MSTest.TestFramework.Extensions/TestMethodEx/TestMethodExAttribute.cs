@@ -13,7 +13,7 @@ namespace MSTest.TestFramework.Extensions.TestMethodEx
             ITestMethod testMethod,
             int repeatCount,
             int retryCount,
-            bool retryOnFail = false)
+            bool finalAttemptResultOnly = false)
         {
             var res = new List<TestResult>();
 
@@ -21,9 +21,9 @@ namespace MSTest.TestFramework.Extensions.TestMethodEx
             {
                 var testResults = executeWithRetryOnFailure(testMethod, retryCount);
 
-                if (retryOnFail && testResults.Any(tr => tr.Outcome == UnitTestOutcome.Passed))
+                if (finalAttemptResultOnly)
                 {
-                    res.Add(testResults.First(tr => tr.Outcome == UnitTestOutcome.Passed));
+                    res.Add(testResults.Last());
                 }
                 else
                 {
@@ -73,39 +73,23 @@ namespace MSTest.TestFramework.Extensions.TestMethodEx
 
             int retryCount = 1;
             int repeatCount = 1;
-            bool retryOnFail = false;
+            bool finalAttemptResultOnly = false;
 
             Attribute[] attr = testMethod.GetAllAttributes(false);
-            if (attr == null)
+
+            var retryAttr = attr.OfType<RetryAttribute>().FirstOrDefault();
+            if (retryAttr != null)
             {
-                Attribute[] r1 = testMethod.GetAttributes<RetryAttribute>(false);
-                var attr2 = new List<Attribute>();
-                attr2.AddRange(r1);
-
-                r1 = testMethod.GetAttributes<RepeatAttribute>(false);
-                attr2.AddRange(r1);
-
-                attr = attr2.ToArray();
+                retryCount = retryAttr.Value;
+                finalAttemptResultOnly = retryAttr.FinalAttemptResultOnly;
+            }
+            var repeatAttr = attr.OfType<RepeatAttribute>().FirstOrDefault();
+            if (repeatAttr != null)
+            {
+                repeatCount = repeatAttr.Value;
             }
 
-            if (attr != null)
-            {
-                foreach (Attribute a in attr)
-                {
-                    if (a is RetryAttribute retryAttr)
-                    {
-                        retryCount = retryAttr.Value;
-                        retryOnFail = retryAttr.RetryOnFail;
-                    }
-
-                    if (a is RepeatAttribute repeatAttr)
-                    {
-                        repeatCount = repeatAttr.Value;
-                    }
-                }
-            }
-
-            var res = executeWithRepeatAndRetry(testMethod, repeatCount, retryCount, retryOnFail);
+            var res = executeWithRepeatAndRetry(testMethod, repeatCount, retryCount, finalAttemptResultOnly);
             return res;
         }
     }

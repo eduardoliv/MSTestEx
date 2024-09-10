@@ -4,6 +4,7 @@ namespace MSTest.TestFramework.Extensions.AttributeEx
 {
     /// <summary>- The RetryAttribute is used on a test method to specify that it should be rerun if it fails, up to a maximum number of times.</summary>
     /// <param name="retryCount">int representing the retry count.</param>"
+    /// <param name="finalAttemptResultOnly">boolean value ensures that only the final test result (from the last retry attempt) is considered as the test's overall result.</param>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class RetryAttribute : Attribute
     {
@@ -12,7 +13,7 @@ namespace MSTest.TestFramework.Extensions.AttributeEx
 
         public RetryAttribute(
             int retryCount,
-            bool retryOnFail = false)
+            bool finalAttemptResultOnly = false)
         {
             if (retryCount < MIN_RETRY_COUNT || MAX_RETRY_COUNT < retryCount)
             {
@@ -20,11 +21,11 @@ namespace MSTest.TestFramework.Extensions.AttributeEx
             }
 
             Value = retryCount;
-            RetryOnFail = retryOnFail;
+            FinalAttemptResultOnly = finalAttemptResultOnly;
         }
 
         public int Value { get; }
 
-        public bool RetryOnFail { get; }
+        public bool FinalAttemptResultOnly { get; }
     }
 }

@@ -80,22 +80,33 @@ namespace MSTest.TestFramework.ExtensionsTests.AttributeExTests
         }
 
         [TestMethod()]
-        [DataRow(UnitTestOutcome.Failed, 1, 1, true)] // retryOnFail = true, Expected to retry once on failure
-        [DataRow(UnitTestOutcome.Failed, 5, 5, true)] // retryOnFail = true, Expected to retry 5 times on failure
-        [DataRow(UnitTestOutcome.Passed, 1, 1, true)] // retryOnFail = true, Test should pass immediately
-        [DataRow(UnitTestOutcome.Passed, 6, 3, true)] // retryOnFail = true, Test should pass on second attempt
-        [DataRow(UnitTestOutcome.Failed, 1, 1, false)] // retryOnFail = false, Test should not retry if fails
-        [DataRow(UnitTestOutcome.Passed, 1, 1, false)] // retryOnFail = false, Test should pass immediately
-        public void RetryTestForRetryOnFailTestOutcomes(
+        [DataRow(UnitTestOutcome.Failed, 1, 1, true)]
+        [DataRow(UnitTestOutcome.Failed, 5, 5, true)]
+        [DataRow(UnitTestOutcome.Failed, 3, 3, true)]
+        [DataRow(UnitTestOutcome.Passed, 1, 1, true)]
+        [DataRow(UnitTestOutcome.Passed, 3, 1, true)]
+        [DataRow(UnitTestOutcome.Passed, 3, 2, true)]
+        [DataRow(UnitTestOutcome.Passed, 3, 3, true)]
+        [DataRow(UnitTestOutcome.Passed, 6, 3, true)]
+        [DataRow(UnitTestOutcome.Inconclusive, 3, 1, true)]
+        [DataRow(UnitTestOutcome.Inconclusive, 3, 3, true)]
+        [DataRow(UnitTestOutcome.InProgress, 3, 1, true)]
+        [DataRow(UnitTestOutcome.Timeout, 5, 5, true)]
+        [DataRow(UnitTestOutcome.Aborted, 2, 2, true)]
+        [DataRow(UnitTestOutcome.Unknown, 3, 3, true)]
+        [DataRow(UnitTestOutcome.NotRunnable, 1, 1, true)]
+        [DataRow(UnitTestOutcome.InProgress, 5, 1, true)]
+        [DataRow(UnitTestOutcome.Timeout, 9, 9, true)]
+        public void RetryTestForFinalAttemptResultOnlyTestOutcomes(
             UnitTestOutcome requiredTestOutCome,
             int requestedRetryCount,
             int expectedExecutionAttempts,
-            bool retryOnFail)
+            bool finalAttemptResultOnly)
         {
             // Arrange
             TestResult[] outcomes = new TestResult[]
             {
-                new TestResult() { Outcome = requiredTestOutCome },
+        new TestResult() { Outcome = requiredTestOutCome },
             };
 
             var mockTestMethod = new Mock<ITestMethod>();
@@ -106,18 +117,18 @@ namespace MSTest.TestFramework.ExtensionsTests.AttributeExTests
             {
                 Attribute[] attr =
                 {
-                    new RetryAttribute(requestedRetryCount, retryOnFail),
-                };
+            new RetryAttribute(requestedRetryCount, finalAttemptResultOnly),
+        };
                 return attr;
             });
 
             var args = It.IsAny<object[]>();
 
-            // Configure the behavior of the mock method based on retryOnFail
+            // Configure the behavior of the mock method based on finalAttemptResultOnly
             mockTestMethod.Setup(tm => tm.Invoke(args)).Returns(() =>
             {
                 attempt++;
-                if (retryOnFail)
+                if (finalAttemptResultOnly)
                 {
                     // Simulate retries based on the requested retry count
                     if (attempt < expectedExecutionAttempts)
@@ -134,7 +145,7 @@ namespace MSTest.TestFramework.ExtensionsTests.AttributeExTests
 
             // Assert
             mockTestMethod.Verify(tm => tm.Invoke(args), Times.Exactly(expectedExecutionAttempts));
-            Assert.AreEqual(tr.Length, requiredTestOutCome == UnitTestOutcome.Passed ? 1 : expectedExecutionAttempts);
+            Assert.AreEqual(tr.Length, 1);
             Assert.IsTrue(tr.All(r => r.Outcome == requiredTestOutCome));
         }
     }
