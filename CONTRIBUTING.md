@@ -27,8 +27,8 @@ Contribute to the [documentation](./docs).
 ### MSTest Test Framework
 The MSTestEx solution already contains a NuGet reference to the MSTest Test Framework v2.2.8.
 
-### .NET Core
-Install DotNet Core from here: [.NET Core 5.0](https://dotnet.microsoft.com/download/dotnet/5.0)
+### .NET 6.0
+Install DotNet from here: [.NET 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
 
 ## Building MSTestEx
 Run the following commands to build MSTestEx
