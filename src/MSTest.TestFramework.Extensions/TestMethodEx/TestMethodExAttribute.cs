@@ -75,7 +75,7 @@ namespace MSTest.TestFramework.Extensions.TestMethodEx
             int repeatCount = 1;
             bool finalAttemptResultOnly = false;
 
-            Attribute[] attr = testMethod.GetAllAttributes(false);
+            Attribute[] attr = testMethod.GetAllAttributes(false) ?? Array.Empty<Attribute>();
 
             var retryAttr = attr.OfType<RetryAttribute>().FirstOrDefault();
             if (retryAttr != null)
